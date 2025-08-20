@@ -2,19 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/lib/auth";
 
 export default function Navbar() {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      // If you have an API route for logout, call it here.
-      // await fetch("/api/logout", { method: "POST" });
-    } catch (e) {
-      // noop
+      logout();
     } finally {
-      // Redirect to login or home; adjust as per your auth flow
-      router.replace("/");
+      router.replace("/login");
     }
   };
 

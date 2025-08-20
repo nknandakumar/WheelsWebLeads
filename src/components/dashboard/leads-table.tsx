@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
 	Table,
 	TableBody,
@@ -30,6 +31,7 @@ interface LeadsTableProps {
 export function LeadsTable({ leads }: LeadsTableProps) {
     const { toast } = useToast();
     const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+    const router = useRouter();
 
 	if (leads.length === 0) {
 		return (
@@ -74,7 +76,11 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 				</TableHeader>
 				<TableBody>
 					{leads.map((lead) => (
-						<TableRow key={lead.id} className="hover:bg-green-50">
+						<TableRow
+							key={lead.id}
+							className="hover:bg-green-50 cursor-pointer"
+							onClick={() => router.push(`/dashboard/my-leads/${lead.id}/view`)}
+						>
 							<TableCell className="font-semibold">{lead.loanId || "N/A"}</TableCell>
 							<TableCell className="font-medium">{lead.name || "N/A"}</TableCell>
 							<TableCell>{lead.mobileNo || "N/A"}</TableCell>
@@ -87,19 +93,20 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 							<TableCell>{lead.bankFinance || "N/A"}</TableCell>
 							<TableCell>{lead.caseDealer || "N/A"}</TableCell>
 							<TableCell className="text-right space-x-2">
-								<Link href={`/dashboard/my-leads/${lead.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline text-sm">View</Link>
-								<Link href={`/dashboard/my-leads/${lead.id}`} prefetch className="text-sm px-2 py-1 border rounded">Update</Link>
+								<Link href={`/dashboard/my-leads/${lead.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline text-sm" onClick={(e) => e.stopPropagation()}>View</Link>
+								<Link href={`/dashboard/my-leads/${lead.id}`} prefetch className="text-sm px-2 py-1 border rounded" onClick={(e) => e.stopPropagation()}>Update</Link>
 								<AlertDialog>
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" size="icon" aria-label="More">
+											<Button variant="ghost" size="icon" aria-label="More" onClick={(e) => e.stopPropagation()}>
 												⋯
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
 											<AlertDialogTrigger asChild>
 												<DropdownMenuItem
-													onClick={() => {
+													onClick={(ev) => {
+														ev.stopPropagation();
 														setToDeleteId(lead.id);
 														toast({ variant: "destructive", title: "Delete Lead?", description: "This action cannot be undone." });
 													}}

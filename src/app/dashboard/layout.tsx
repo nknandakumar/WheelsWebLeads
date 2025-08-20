@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getAuth } from "@/lib/auth";
 
 export default function DashboardLayout({
     children,
@@ -11,10 +12,8 @@ export default function DashboardLayout({
     const router = useRouter();
 
     useEffect(() => {
-        const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-        if (!isAuthenticated) {
-            router.replace("/");
-        }
+        const { isAuthenticated } = getAuth();
+        if (!isAuthenticated) router.replace("/login");
     }, [router]);
 
     return (

@@ -24,16 +24,15 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/lib/auth";
 
 export function DashboardSidebar() {
 	const pathname = usePathname();
 	const router = useRouter();
 
 	const handleLogout = () => {
-		if (typeof window !== "undefined") {
-			localStorage.removeItem("isAuthenticated");
-		}
-		router.push("/");
+		logout();
+		router.replace("/login");
 	};
 
 	const menuItems = [

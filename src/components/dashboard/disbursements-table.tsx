@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ interface DisbursementsTableProps {
 export function DisbursementsTable({ disbursements }: DisbursementsTableProps) {
   const { toast } = useToast();
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+  const router = useRouter();
 
   if (disbursements.length === 0) {
     return (
@@ -69,7 +71,11 @@ export function DisbursementsTable({ disbursements }: DisbursementsTableProps) {
         </TableHeader>
         <TableBody>
           {disbursements.map((d) => (
-            <TableRow key={d.id} className="hover:bg-green-50">
+            <TableRow
+              key={d.id}
+              className="hover:bg-green-50 cursor-pointer"
+              onClick={() => router.push(`/dashboard/my-disbursements/${d.id}/view`)}
+            >
               <TableCell className="font-semibold">{d.loanId || "N/A"}</TableCell>
               <TableCell>{d.rcNo || "N/A"}</TableCell>
               <TableCell className="font-medium">{d.name || "N/A"}</TableCell>
@@ -81,17 +87,18 @@ export function DisbursementsTable({ disbursements }: DisbursementsTableProps) {
               <TableCell>{d.bankFinance || "N/A"}</TableCell>
               <TableCell>{d.caseDealer || "N/A"}</TableCell>
               <TableCell className="text-right space-x-2">
-                <Link href={`/dashboard/my-disbursements/${d.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline text-sm">View</Link>
-                <Link href={`/dashboard/my-disbursements/${d.id}`} prefetch className="text-sm px-2 py-1 border rounded">Update</Link>
+                <Link href={`/dashboard/my-disbursements/${d.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline text-sm" onClick={(e) => e.stopPropagation()}>View</Link>
+                <Link href={`/dashboard/my-disbursements/${d.id}`} prefetch className="text-sm px-2 py-1 border rounded" onClick={(e) => e.stopPropagation()}>Update</Link>
                 <AlertDialog>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" aria-label="More">⋯</Button>
+                      <Button variant="ghost" size="icon" aria-label="More" onClick={(e) => e.stopPropagation()}>⋯</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <AlertDialogTrigger asChild>
                         <DropdownMenuItem
-                          onClick={() => {
+                          onClick={(ev) => {
+                            ev.stopPropagation();
                             setToDeleteId(d.id);
                             toast({ variant: "destructive", title: "Delete Disbursement?", description: "This action cannot be undone." });
                           }}
