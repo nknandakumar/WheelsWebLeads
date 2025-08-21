@@ -5,8 +5,11 @@ import { getLeadById } from "@/lib/data";
 import { type Lead } from "@/lib/schemas";
 import { NewLeadForm } from "@/components/dashboard/new-lead-form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
+    const router = useRouter();
     const { id } = usePromise(params);
     const [lead, setLead] = useState<Lead | null>(null);
     const [loading, setLoading] = useState(true);
@@ -47,7 +50,10 @@ export default function EditLeadPage({ params }: { params: Promise<{ id: string 
     }
 
     if (error) {
-        return <div className="p-6 text-destructive">{error}</div>;
+        return <div className="flex flex-col  justify-center items-center">
+            <div className="p-6 text-destructive">{error}</div>
+            <Button onClick={() => router.back()}>Back</Button>
+        </div>;
     }
 
     return (

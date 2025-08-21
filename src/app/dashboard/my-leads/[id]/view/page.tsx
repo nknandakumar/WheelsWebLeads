@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 "use client";
 
 import { useEffect, useState, use as usePromise } from "react";
@@ -22,7 +30,11 @@ export default function ViewLeadPage({ params }: { params: Promise<{ id: string 
         setLoading(true);
         const data = await getLeadById(id);
         if (data) setLead(data);
-        else setError("Lead not found.");
+        else {
+          // If lead was deleted or not found, redirect back to list
+          router.replace("/dashboard/my-leads");
+          return;
+        }
       } catch (e) {
         console.error(e);
         setError("Failed to load lead.");

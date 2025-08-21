@@ -123,6 +123,8 @@ export function DisbursementsTable({ disbursements }: DisbursementsTableProps) {
                           try {
                             await deleteDisbursement(toDeleteId);
                             toast({ title: "Deleted", description: "Disbursement removed." });
+                            // Refresh the current route to re-fetch data and update the table
+                            router.refresh();
                             // Optionally re-fetch in parent via state
                           } catch (e) {
                             toast({ variant: "destructive", title: "Error", description: "Failed to delete disbursement." });

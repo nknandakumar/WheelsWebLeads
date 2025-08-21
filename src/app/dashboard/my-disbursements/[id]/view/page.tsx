@@ -22,7 +22,11 @@ export default function ViewDisbursementPage({ params }: { params: Promise<{ id:
         setLoading(true);
         const data = await getDisbursementById(id);
         if (data) setDisbursement(data);
-        else setError("Disbursement not found.");
+        else {
+          // If the disbursement was deleted or not found, navigate back to the list
+          router.replace("/dashboard/my-disbursements");
+          return;
+        }
       } catch (e) {
         console.error(e);
         setError("Failed to load disbursement.");

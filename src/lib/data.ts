@@ -238,8 +238,8 @@ function seedDemoData() {
     }
 }
 
-// Seed on module load (client-side only)
-try { seedDemoData(); } catch {}
+// Seed disabled now that we use real backend
+// try { seedDemoData(); } catch {}
 
 // --- Loan ID ---
 export const getNextLoanId = (): string => {
@@ -268,49 +268,48 @@ export const getNextLoanId = (): string => {
 };
 
 export const deleteLead = async (id: string): Promise<void> => {
-    const items = readArray<Lead>(LS_LEADS_KEY);
-    const next = items.filter((l) => l.id !== id);
-    writeArray(LS_LEADS_KEY, next);
+    const res = await fetch(`/api/leads/${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete lead");
 };
 
 // --- Leads ---
 export const getLeads = async (offset = 0, limit = 50): Promise<Lead[]> => {
-    const allLeads = readArray<Lead>(LS_LEADS_KEY);
-    return allLeads.slice(offset, offset + limit);
+    const res = await fetch(`/api/leads?offset=${offset}&limit=${limit}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch leads");
+    const data = (await res.json()) as Lead[];
+    return data;
 };
 
 export const getLeadsCount = async (): Promise<number> => {
-    const allLeads = readArray<Lead>(LS_LEADS_KEY);
-    return allLeads.length || 0;
+    const res = await fetch(`/api/leads/count`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch leads count");
+    const { count } = (await res.json()) as { count: number };
+    return count || 0;
 };
 
 export const getLeadById = async (id: string): Promise<Lead | undefined> => {
-    const leads = readArray<Lead>(LS_LEADS_KEY);
-    return leads.find((lead) => lead.id === id);
+    const res = await fetch(`/api/leads/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (res.status === 404) return undefined;
+    if (!res.ok) throw new Error("Failed to fetch lead");
+    return (await res.json()) as Lead;
 };
 
 export const saveLead = async (lead: Lead): Promise<void> => {
-    const items = readArray<Lead>(LS_LEADS_KEY);
-    items.push(lead);
-    writeArray(LS_LEADS_KEY, items);
+    const res = await fetch(`/api/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lead),
+    });
+    if (!res.ok) throw new Error("Failed to create lead");
 };
 
 export const updateLead = async (updatedLead: Lead): Promise<void> => {
-    console.log("updateLead called with ID:", updatedLead.id);
-    const items = readArray<Lead>(LS_LEADS_KEY);
-    console.log("Current leads in storage:", items.length);
-    const idx = items.findIndex((l) => l.id === updatedLead.id);
-    console.log("Found lead at index:", idx);
-    
-    if (idx === -1) {
-        console.log("Lead not found, adding as new");
-        items.push(updatedLead);
-    } else {
-        console.log("Updating existing lead at index:", idx);
-        items[idx] = updatedLead;
-    }
-    writeArray(LS_LEADS_KEY, items);
-    console.log("Lead update completed");
+    const res = await fetch(`/api/leads/${encodeURIComponent(updatedLead.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedLead),
+    });
+    if (!res.ok) throw new Error("Failed to update lead");
 };
 
 // --- Disbursements ---
@@ -318,52 +317,50 @@ export const getDisbursements = async (
     offset = 0,
     limit = 50
 ): Promise<Disbursement[]> => {
-    const allDisbursements = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    return allDisbursements.slice(offset, offset + limit);
+    const res = await fetch(`/api/disbursements?offset=${offset}&limit=${limit}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch disbursements");
+    return (await res.json()) as Disbursement[];
 };
 
 export const getDisbursementsCount = async (): Promise<number> => {
-    const allDisbursements = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    return allDisbursements.length || 0;
+    const res = await fetch(`/api/disbursements/count`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch disbursements count");
+    const { count } = (await res.json()) as { count: number };
+    return count || 0;
 };
 
 export const getDisbursementById = async (
     id: string
 ): Promise<Disbursement | undefined> => {
-    const disbursements = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    return disbursements.find((d) => d.id === id);
+    const res = await fetch(`/api/disbursements/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (res.status === 404) return undefined;
+    if (!res.ok) throw new Error("Failed to fetch disbursement");
+    return (await res.json()) as Disbursement;
 };
 
 export const saveDisbursement = async (
     disbursement: Disbursement
 ): Promise<void> => {
-    const items = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    items.push(disbursement);
-    writeArray(LS_DISBURSEMENTS_KEY, items);
+    const res = await fetch(`/api/disbursements`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(disbursement),
+    });
+    if (!res.ok) throw new Error("Failed to create disbursement");
 };
 
 export const updateDisbursement = async (
     updatedDisbursement: Disbursement
 ): Promise<void> => {
-    console.log("updateDisbursement called with ID:", updatedDisbursement.id);
-    const items = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    console.log("Current disbursements in storage:", items.length);
-    const idx = items.findIndex((d) => d.id === updatedDisbursement.id);
-    console.log("Found disbursement at index:", idx);
-    
-    if (idx === -1) {
-        console.log("Disbursement not found, adding as new");
-        items.push(updatedDisbursement);
-    } else {
-        console.log("Updating existing disbursement at index:", idx);
-        items[idx] = updatedDisbursement;
-    }
-    writeArray(LS_DISBURSEMENTS_KEY, items);
-    console.log("Disbursement update completed");
+    const res = await fetch(`/api/disbursements/${encodeURIComponent(updatedDisbursement.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedDisbursement),
+    });
+    if (!res.ok) throw new Error("Failed to update disbursement");
 };
 
 export const deleteDisbursement = async (id: string): Promise<void> => {
-    const items = readArray<Disbursement>(LS_DISBURSEMENTS_KEY);
-    const next = items.filter((d) => d.id !== id);
-    writeArray(LS_DISBURSEMENTS_KEY, next);
+    const res = await fetch(`/api/disbursements/${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete disbursement");
 };

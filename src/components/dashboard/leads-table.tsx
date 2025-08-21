@@ -131,6 +131,8 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 													try {
 														await deleteLead(toDeleteId);
 														toast({ title: "Deleted", description: "Lead removed." });
+														// Refresh the current route to re-fetch data and update the table
+														router.refresh();
 														// Optionally, you could trigger a re-fetch in parent via state
 													} catch (e) {
 														toast({ variant: "destructive", title: "Error", description: "Failed to delete lead." });

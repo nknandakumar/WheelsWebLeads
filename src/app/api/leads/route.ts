@@ -1,0 +1,205 @@
+import { NextRequest, NextResponse } from "next/server";
+import { query } from "@/lib/db";
+
+export const runtime = "nodejs";
+
+function mapRowToLead(row: any) {
+  return {
+    id: row.loan_id ?? "",
+    loanId: row.loan_id ?? "",
+    dateTime: row.date_time ?? "",
+    source: row.source ?? "",
+    stage: row.stage ?? "",
+    profileType: row.profile_type,
+    name: row.name,
+    gender: row.gender,
+    customerProfile: row.customer_profile,
+    maritalStatus: row.marital_status ?? "",
+    panNo: row.pan_no,
+    mobileNo: row.mobile_no,
+    altMobileNo: row.alt_mobile_no ?? "",
+    email: row.email,
+    motherName: row.mother_name ?? "",
+    loanAmount: row.loan_amount,
+    dsa: row.dsa,
+    rcNo: row.rc_no,
+    vehicleVerient: row.vehicle_verient,
+    mfgYear: row.mfg_year ?? "",
+    osNo: row.os_no ?? "",
+    kilometreReading: row.kilometre_reading ?? "",
+    vehicleOwnerContactNo: row.vehicle_owner_contact_no,
+    vehicleLocation: row.vehicle_location ?? "",
+    refFirstName: row.ref_first_name ?? "",
+    refFirstMobNo: row.ref_first_mob_no ?? "",
+    refSecondName: row.ref_second_name ?? "",
+    refSecondMobNo: row.ref_second_mob_no ?? "",
+    nomineeName: row.nominee_name ?? "",
+    nomineeDob: row.nominee_dob ?? "",
+    nomineeRelationship: row.nominee_relationship ?? "",
+    permanentAddressType: row.permanent_address_type,
+    permanentAddressLandmark: row.permanent_address_landmark,
+    permanentAddressCategory: row.permanent_address_category,
+    isCurrentAddressSame: row.is_current_address_same ?? false,
+    currentAddressType: row.current_address_type ?? "",
+    currentAddressLandmark: row.current_address_landmark ?? "",
+    currentAddressCategory: row.current_address_category ?? "",
+    isOfficeAddressSame: row.is_office_address_same ?? false,
+    employmentDetail: row.employment_detail,
+    officeAddressType: row.office_address_type ?? "",
+    officeAddressLandmark: row.office_address_landmark ?? "",
+    bankFinance: row.bank_finance ?? "",
+    branch: row.branch ?? "",
+    loginExecutiveName: row.login_executive_name ?? "",
+    caseDealer: row.case_dealer,
+    refNameMobNo: row.ref_name_mob_no ?? "",
+    remarks: row.remarks ?? "",
+  };
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const offset = parseInt(searchParams.get("offset") || "0", 10);
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
+
+  const { rows } = await query(
+    `SELECT * FROM leads ORDER BY id DESC OFFSET $1 LIMIT $2`,
+    [offset, limit]
+  );
+  const items = rows.map(mapRowToLead);
+
+  return NextResponse.json(items);
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  // Expect client to send a UUID-like id for consistency with frontend state
+  const {
+    id,
+    loanId,
+    dateTime,
+    source,
+    stage,
+    profileType,
+    name,
+    gender,
+    customerProfile,
+    maritalStatus,
+    panNo,
+    mobileNo,
+    altMobileNo,
+    email,
+    motherName,
+    loanAmount,
+    dsa,
+    rcNo,
+    vehicleVerient,
+    mfgYear,
+    osNo,
+    kilometreReading,
+    vehicleOwnerContactNo,
+    vehicleLocation,
+    refFirstName,
+    refFirstMobNo,
+    refSecondName,
+    refSecondMobNo,
+    nomineeName,
+    nomineeDob,
+    nomineeRelationship,
+    permanentAddressType,
+    permanentAddressLandmark,
+    permanentAddressCategory,
+    isCurrentAddressSame,
+    currentAddressType,
+    currentAddressLandmark,
+    currentAddressCategory,
+    isOfficeAddressSame,
+    employmentDetail,
+    officeAddressType,
+    officeAddressLandmark,
+    bankFinance,
+    branch,
+    loginExecutiveName,
+    caseDealer,
+    refNameMobNo,
+    remarks,
+  } = body;
+
+  const { rows } = await query(
+    `INSERT INTO leads (
+      loan_id, date_time, source, stage, profile_type, name, gender, customer_profile, marital_status,
+      pan_no, mobile_no, alt_mobile_no, email, mother_name, loan_amount, dsa,
+      rc_no, vehicle_verient, mfg_year, os_no, kilometre_reading, vehicle_owner_contact_no, vehicle_location,
+      ref_first_name, ref_first_mob_no, ref_second_name, ref_second_mob_no,
+      nominee_name, nominee_dob, nominee_relationship,
+      permanent_address_type, permanent_address_landmark, permanent_address_category,
+      is_current_address_same, current_address_type, current_address_landmark, current_address_category,
+      is_office_address_same, employment_detail, office_address_type, office_address_landmark,
+      bank_finance, branch, login_executive_name,
+      case_dealer, ref_name_mob_no,
+      remarks
+    ) VALUES (
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,
+      $10,$11,$12,$13,$14,$15,$16,
+      $17,$18,$19,$20,$21,$22,$23,
+      $24,$25,$26,$27,
+      $28,$29,$30,
+      $31,$32,$33,
+      $34,$35,$36,$37,
+      $38,$39,$40,$41,
+      $42,$43,$44,
+      $45,$46,
+      $47
+    ) RETURNING *`,
+    [
+      loanId || null,
+      dateTime || null,
+      source || null,
+      stage || null,
+      profileType,
+      name,
+      gender,
+      customerProfile,
+      maritalStatus || null,
+      panNo,
+      mobileNo,
+      altMobileNo || null,
+      email,
+      motherName || null,
+      loanAmount,
+      dsa,
+      rcNo,
+      vehicleVerient,
+      mfgYear || null,
+      osNo || null,
+      kilometreReading || null,
+      vehicleOwnerContactNo,
+      vehicleLocation || null,
+      refFirstName || null,
+      refFirstMobNo || null,
+      refSecondName || null,
+      refSecondMobNo || null,
+      nomineeName || null,
+      nomineeDob || null,
+      nomineeRelationship || null,
+      permanentAddressType,
+      permanentAddressLandmark,
+      permanentAddressCategory,
+      !!isCurrentAddressSame,
+      currentAddressType || null,
+      currentAddressLandmark || null,
+      currentAddressCategory || null,
+      !!isOfficeAddressSame,
+      employmentDetail,
+      officeAddressType || null,
+      officeAddressLandmark || null,
+      bankFinance || null,
+      branch || null,
+      loginExecutiveName || null,
+      caseDealer,
+      refNameMobNo || null,
+      remarks || null,
+    ]
+  );
+
+  return NextResponse.json(mapRowToLead(rows[0]), { status: 201 });
+}
