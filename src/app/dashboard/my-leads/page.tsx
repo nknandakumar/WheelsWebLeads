@@ -82,7 +82,10 @@ export default function MyLeadsPage() {
 			</header>
 			<main className="flex-1">
 				{loading ? (
-					<p>Loading leads...</p>
+					  <div className="text-center">
+					  <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-green-500 mx-auto"></div>
+					  <h2 className="text-zinc-900 dark:text-white mt-4">Loading Leads...</h2>
+					</div>
 				) : (
 					<>
 						<LeadsTable leads={filteredLeads} />

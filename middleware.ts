@@ -48,14 +48,31 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  // Determine role early to handle /login redirect for authenticated users
+  const role = await getRoleFromReq(req);
+
+  // If already authenticated, prevent access to /login
+  if (pathname === "/login" && role) {
+    const dest = role === "admin" ? "/admin" : "/dashboard";
+    const r = NextResponse.redirect(new URL(dest, req.url));
+    r.headers.set("Cache-Control", "no-store");
+    return r;
+  }
+
+  // If already authenticated and at root '/', send to default page
+  if (pathname === "/" && role) {
+    const dest = role === "admin" ? "/admin" : "/dashboard";
+    const r = NextResponse.redirect(new URL(dest, req.url));
+    r.headers.set("Cache-Control", "no-store");
+    return r;
+  }
+
   // Public paths
   if (PUBLIC_PATHS.includes(pathname)) {
     const res = NextResponse.next();
     res.headers.set("Cache-Control", "no-store");
     return res;
   }
-
-  const role = await getRoleFromReq(req);
 
   // Protect dashboard and nested paths
   if (pathname.startsWith("/dashboard")) {

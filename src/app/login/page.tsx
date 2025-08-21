@@ -37,6 +37,22 @@ function LoginPageInner() {
     }
   }, [next, router]);
 
+  // Client-side guard: if already authenticated, redirect away from /login
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store", credentials: "same-origin" });
+        const data = await res.json();
+        if (!cancelled && data?.authenticated) {
+          const target = data.role === "admin" ? "/admin" : (next || "/dashboard");
+          router.replace(target);
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [router, next]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Client-side validation
@@ -53,7 +69,7 @@ function LoginPageInner() {
       const resp = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: username.trim(), password, role }),
         // Ensure the Set-Cookie response is not affected by caches and cookies flow correctly
         cache: "no-store",
         credentials: "same-origin",
@@ -66,9 +82,22 @@ function LoginPageInner() {
       if (resolvedRole === "admin") {
         // Admin: go to admin if next is generic
         const target = next === "/" || next === "/dashboard" ? "/admin" : next;
+        router.refresh();
         router.replace(target);
+        // Fallback for some mobile browsers if SPA navigation races cookie write
+        setTimeout(() => {
+          if (window?.location?.pathname !== target) {
+            window.location.assign(target);
+          }
+        }, 0);
       } else {
+        router.refresh();
         router.replace(next);
+        setTimeout(() => {
+          if (window?.location?.pathname !== next) {
+            window.location.assign(next);
+          }
+        }, 0);
       }
     } catch (err: any) {
       toast({ title: "Login failed", description: err?.message || "Unable to sign in", variant: "destructive" });

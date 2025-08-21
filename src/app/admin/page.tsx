@@ -145,7 +145,16 @@ export default function AdminPage() {
     copy(payload);
   };
 
-  if (loading) return <div className="p-6">Loading...</div>;
+  if (loading) return <div className="flex-col mt-20 gap-4 w-full flex items-center justify-center">
+  <div
+    className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full"
+  >
+    <div
+      className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"
+    ></div>
+  </div>
+</div>
+;
   if (error) return <div className="p-6 text-destructive">{error}</div>;
 
   return (

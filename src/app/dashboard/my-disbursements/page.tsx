@@ -45,10 +45,10 @@ export default function MyDisbursementsPage() {
     const base = !searchTerm
       ? disbursements
       : disbursements.filter(d =>
-          Object.values(d).some(value =>
-            String(value).toLowerCase().includes(searchTerm.toLowerCase())
-          )
-        );
+        Object.values(d).some(value =>
+          String(value).toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
     return [...base].sort((a, b) => {
       const ta = a.dateTime ? Date.parse(a.dateTime) : 0;
       const tb = b.dateTime ? Date.parse(b.dateTime) : 0;
@@ -73,14 +73,18 @@ export default function MyDisbursementsPage() {
               placeholder="Search 🔍"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              	className="bg-green-100 border border-green-500"
+              className="bg-green-100 border border-green-500"
             />
           </div>
         </div>
       </header>
       <main className="flex-1">
         {loading ? (
-          <p>Loading disbursements...</p>
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-green-500 mx-auto"></div>
+            <h2 className="text-zinc-900 dark:text-white mt-4">Loading Disbursements...</h2>
+          </div>
+
         ) : (
           <>
             <DisbursementsTable disbursements={filteredDisbursements} />
