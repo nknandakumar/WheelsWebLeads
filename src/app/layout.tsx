@@ -6,7 +6,16 @@ import AppLayout from "@/components/app-layout";
 export const metadata: Metadata = {
 	title: "Wheels Web",
 	description: "Lead Management System",
-};
+	icons: {
+	  icon: [
+		{
+		  url: "https://ik.imagekit.io/6b0su29zd/WhatsApp_Image_2025-08-07_at_22.00.32_87fa3b77-removebg-preview.png?updatedAt=1755799830023",
+		  sizes: "32x32",
+		},
+	  ],
+	},
+  };
+  
 
 export default function RootLayout({
 	children,

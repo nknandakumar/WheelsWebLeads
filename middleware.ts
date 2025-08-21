@@ -43,12 +43,16 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/api")
   ) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   }
 
   // Public paths
   if (PUBLIC_PATHS.includes(pathname)) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set("Cache-Control", "no-store");
+    return res;
   }
 
   const role = await getRoleFromReq(req);
@@ -58,11 +62,15 @@ export async function middleware(req: NextRequest) {
     if (!role) {
       const url = new URL("/login", req.url);
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      const r = NextResponse.redirect(url);
+      r.headers.set("Cache-Control", "no-store");
+      return r;
     }
     // Admin-only gate
     if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      const r = NextResponse.redirect(new URL("/dashboard", req.url));
+      r.headers.set("Cache-Control", "no-store");
+      return r;
     }
   }
 
@@ -71,10 +79,14 @@ export async function middleware(req: NextRequest) {
     if (!role) {
       const url = new URL("/login", req.url);
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      const r = NextResponse.redirect(url);
+      r.headers.set("Cache-Control", "no-store");
+      return r;
     }
     if (role !== "admin") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      const r = NextResponse.redirect(new URL("/dashboard", req.url));
+      r.headers.set("Cache-Control", "no-store");
+      return r;
     }
   }
 
@@ -82,9 +94,13 @@ export async function middleware(req: NextRequest) {
   if (!role && !PUBLIC_PATHS.includes(pathname) && pathname !== "/") {
     const url = new URL("/login", req.url);
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    const r = NextResponse.redirect(url);
+    r.headers.set("Cache-Control", "no-store");
+    return r;
   }
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }
 
 export const config = {

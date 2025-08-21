@@ -4,14 +4,27 @@ import type { JWTPayload } from "jose";
 
 export type AppRole = "admin" | "user";
 
-const JWT_NAME = "app_session";
+export const JWT_NAME = "app_session";
 const JWT_ISSUER = "wheelsweb";
 const JWT_AUDIENCE = "wheelsweb_app";
-const DEFAULT_EXP_SECONDS = 60 * 60 * 8; // 8 hours
+export const DEFAULT_EXP_SECONDS = 60 * 5; // 5 minutes
 
 function getSecret() {
   const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "dev-insecure-secret-change";
   return new TextEncoder().encode(secret);
+}
+
+// Helper to just sign and return the session token for use in a NextResponse
+export async function signSessionToken(username: string, role: AppRole, maxAgeSec = DEFAULT_EXP_SECONDS) {
+  const token = await new SignJWT({ role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuer(JWT_ISSUER)
+    .setAudience(JWT_AUDIENCE)
+    .setSubject(username)
+    .setIssuedAt()
+    .setExpirationTime(Math.floor(Date.now() / 1000) + maxAgeSec)
+    .sign(getSecret());
+  return token;
 }
 
 export interface SessionPayload extends JWTPayload {

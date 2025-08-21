@@ -54,6 +54,9 @@ function LoginPageInner() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim(), password }),
+        // Ensure the Set-Cookie response is not affected by caches and cookies flow correctly
+        cache: "no-store",
+        credentials: "same-origin",
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data?.error || "Login failed");
