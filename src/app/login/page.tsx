@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/dashboard";
@@ -153,5 +153,14 @@ export default function LoginPage() {
       </AlertDialogContent>
     </AlertDialog>
     </>
+  );
+}
+
+// Default export wrapped in Suspense to satisfy useSearchParams requirement
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="min-h-screen grid place-items-center"><div className="text-sm text-gray-600">Loading…</div></main>}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
