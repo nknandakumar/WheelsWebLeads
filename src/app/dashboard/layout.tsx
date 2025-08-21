@@ -1,21 +1,15 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth-server";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { getAuth } from "@/lib/auth";
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const router = useRouter();
-
-    useEffect(() => {
-        const { isAuthenticated } = getAuth();
-        if (!isAuthenticated) router.replace("/login");
-    }, [router]);
-
+    const sess = await getSession();
+    if (!sess) {
+        redirect(`/login?next=/dashboard`);
+    }
     return (
         <div className="min-h-screen bg-white">
             <main className="flex-1">{children}</main>

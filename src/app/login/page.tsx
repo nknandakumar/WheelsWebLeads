@@ -1,52 +1,86 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { login, getCredentials, type Role, getAuth } from "@/lib/auth";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<Role>("user");
+  const params = useSearchParams();
+  const next = params.get("next") || "/dashboard";
+  const [role, setRole] = useState<"user" | "admin">("user");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorItems, setErrorItems] = useState<string[]>([]);
 
-  // If already authed, send to appropriate page
+  // Prefetch the next route to make post-login navigation instant
   useEffect(() => {
-    const { isAuthenticated, role } = getAuth();
-    if (isAuthenticated && role) {
-      router.replace(role === "admin" ? "/admin" : "/dashboard");
+    // Only prefetch internal app routes
+    if (next.startsWith("/")) {
+      router.prefetch(next);
     }
-  }, [router]);
-
-  // Prefill with demo creds per role
-  useEffect(() => {
-    const demo = getCredentials(role);
-    setUsername(String(demo.username));
-    setPassword(String(demo.password));
-  }, [role]);
+  }, [next, router]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Client-side validation
+    const errs: string[] = [];
+    if (!username.trim()) errs.push("Username is required");
+    if (!password) errs.push("Password is required");
+    if (errs.length) {
+      setErrorItems(errs);
+      setErrorOpen(true);
+      return;
+    }
     setLoading(true);
-    const res = login(role, username.trim(), password);
-    setLoading(false);
-    if (res.ok) {
-      router.replace(role === "admin" ? "/admin" : "/dashboard");
-    } else {
-      alert(res.message || "Invalid credentials");
+    try {
+      const resp = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || "Login failed");
+      toast({ title: "Signed in", description: `Welcome ${username.trim() || ""}` });
+      // Keep UX of role toggle for redirection, but the server decides actual role
+      const resolvedRole: "admin" | "user" = data.role === "admin" ? "admin" : "user";
+      if (resolvedRole === "admin") {
+        // Admin: go to admin if next is generic
+        const target = next === "/" || next === "/dashboard" ? "/admin" : next;
+        router.replace(target);
+      } else {
+        router.replace(next);
+      }
+    } catch (err: any) {
+      toast({ title: "Login failed", description: err?.message || "Unable to sign in", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen w-full flex items-start md:items-center justify-center bg-gray-50 py-10">
+    <>
+    <main className="min-h-screen w-full flex items-center md:items-center justify-center bg-gray-50 py-10">
       <div className="w-full max-w-md px-4">
         <h1 className="text-4xl font-extrabold text-center mb-8">Wheels Web</h1>
         <Card className="shadow-sm">
-          <CardHeader>
+          <CardHeader className="flex items-center justify-center">
             <CardTitle>Sign in</CardTitle>
           </CardHeader>
           <CardContent>
@@ -61,27 +95,63 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Username</label>
-                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="user@example.com" className="bg-blue-50" />
+                <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="username" className="bg-blue-50" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Password</label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="user123" className="bg-blue-50" />
+                <div className="relative">
+                  <Input
+                    type={showPass ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="password"
+                    className="bg-blue-50 pr-12"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((v) => !v)}
+                    className="absolute inset-y-0 right-2 my-auto h-8 px-2 rounded text-sm text-gray-600 hover:text-gray-900"
+                    aria-label={showPass ? "Hide password" : "Show password"}
+                  >
+                    {showPass ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Signing in...
+                  </span>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
-
-              <p className="text-xs text-gray-600 pt-2">
-                For demo:<br />
-                Admin: admin@example.com / admin123<br />
-                User: user@example.com / user123
-              </p>
+              {/* no demo autofill or demo text */}
             </form>
           </CardContent>
         </Card>
       </div>
     </main>
+
+    <AlertDialog open={errorOpen} onOpenChange={setErrorOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Validation error</AlertDialogTitle>
+          <AlertDialogDescription>
+            <ul className="list-disc pl-5 space-y-1">
+              {errorItems.map((m, i) => (
+                <li key={i}>{m}</li>
+              ))}
+            </ul>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction>OK</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

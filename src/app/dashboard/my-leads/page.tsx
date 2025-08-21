@@ -69,7 +69,7 @@ export default function MyLeadsPage() {
 				</div>
 				<hr className="my-4 px-0 mx-0 border-gray-400" />
 				<div className="flex justify-between flex-col md:flex-row items-center">
-					<h1 className="text-2xl font-bold">My Leads</h1>
+					<h1 className="text-2xl  font-bold">My Leads</h1>
 					<div className="w-full flex gap-2 justify-baseline max-w-sm">
 						<Input
 							placeholder="Search 🔍"

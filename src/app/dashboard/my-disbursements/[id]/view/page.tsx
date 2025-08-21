@@ -92,7 +92,7 @@ export default function ViewDisbursementPage({ params }: { params: Promise<{ id:
             <h1 className="text-2xl font-bold">Disbursement Details</h1>
             <p className="text-muted-foreground">{disbursement.name} — {disbursement.loanId}</p>
           </div>
-          <div className="space-x-2 print:hidden">
+          <div className="space-x-2 flex justify-baseline items-center print:hidden">
             <Button variant="outline" onClick={() => router.push(`/dashboard/my-disbursements/${disbursement.id}`)}>Edit</Button>
             <Button onClick={onPrint}>Print</Button>
           </div>

@@ -15,7 +15,8 @@ export const LeadSchema = z.object({
   gender: requiredString("Gender is required"),
   customerProfile: requiredString("Customer profile is required"),
   maritalStatus: requiredString("Marital status is required"),
-  panNo: requiredString("PAN No. is required").regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+  // PAN: exactly 10 uppercase characters (alphanumeric)
+  panNo: requiredString("PAN No. is required").regex(/^[A-Z0-9]{10}$/, "Must be 10 uppercase characters"),
   mobileNo: requiredString("Mobile No. is required").regex(/^\d{10}$/, "Must be 10 digits"),
   altMobileNo: z.string().optional(),
   email: requiredString("Email is required").email(),
@@ -25,12 +26,13 @@ export const LeadSchema = z.object({
   dsa: requiredString("DSA is required"),
 
   // Vehicle Information
-  rcNo: requiredString("RC No. is required"),
+  // RC NO: uppercase alphanumeric, length 6-15
+  rcNo: requiredString("RC No. is required").regex(/^[A-Z0-9]{6,15}$/, "RC No. must be 6-15 uppercase letters/digits"),
   vehicleVerient: requiredString("Vehicle/Verient is required"),
   mfgYear: requiredString("MFG Year is required"),
   osNo: requiredString("O.S No. is required"),
   kilometreReading: z.string().optional(),
-  vehicleOwnerContactNo: requiredString("Vehicle owner contact no. is required"),
+  vehicleOwnerContactNo: requiredString("Vehicle owner contact no. is required").regex(/^\d{10}$/, "Must be 10 digits"),
   vehicleLocation: z.string().optional(),
 
   // Ref Contact Information
@@ -108,7 +110,8 @@ export const DisbursementSchema = z.object({
   name: requiredString("Name is required"),
   gender: requiredString("Gender is required"),
   customerProfile: requiredString("Customer profile is required"),
-  panNo: requiredString("PAN No. is required").regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format"),
+  // PAN: exactly 10 uppercase characters (alphanumeric)
+  panNo: requiredString("PAN No. is required").regex(/^[A-Z0-9]{10}$/, "Must be 10 uppercase characters"),
   mobileNo: requiredString("Mobile no. is required").regex(/^\d{10}$/, "Must be 10 digits"),
   altMobileNo: z.string().optional(),
   email: requiredString("Email is required").email(),
@@ -148,7 +151,7 @@ export const DisbursementSchema = z.object({
 
   // Dealer Details
   caseDealer: requiredString("Case dealer is required"),
-  dealerMob: z.string().optional(),
+  dealerMob: z.string().optional().refine((v) => !v || /^\d{10}$/.test(v), { message: "Must be 10 digits" }),
   
   rcCardStatus: requiredString("RC Card Status is required"),
   remarks: z.string().optional(),

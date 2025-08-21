@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { RefreshCw } from "lucide-react";
 
 interface LeadsTableProps {
 	leads: Lead[];
@@ -31,6 +32,7 @@ interface LeadsTableProps {
 export function LeadsTable({ leads }: LeadsTableProps) {
     const { toast } = useToast();
     const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
     const router = useRouter();
 
 	if (leads.length === 0) {
@@ -59,8 +61,25 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 		}
 	};
 
+    const onRefetch = () => {
+        if (refreshing) return;
+        setRefreshing(true);
+        router.refresh();
+        // Show spinner briefly for UX; data reload is handled by Next
+        setTimeout(() => setRefreshing(false), 800);
+    };
+
 	return (
 		<div className="border rounded-lg">
+            <div className="flex items-center justify-end gap-2 p-2 border-b bg-white">
+                <Button variant="outline" size="sm" onClick={onRefetch} disabled={refreshing} className="min-w-24">
+                    {refreshing ? (
+                        <span className="inline-flex items-center gap-2"><RefreshCw className="h-4 w-4 animate-spin" /> Refetching</span>
+                    ) : (
+                        <span className="inline-flex items-center gap-2"><RefreshCw className="h-4 w-4" /> Refetch</span>
+                    )}
+                </Button>
+            </div>
 			<Table>
 				<TableHeader className="bg-green-100" >
 					<TableRow>
@@ -93,12 +112,12 @@ export function LeadsTable({ leads }: LeadsTableProps) {
 							<TableCell>{lead.bankFinance || "N/A"}</TableCell>
 							<TableCell>{lead.caseDealer || "N/A"}</TableCell>
 							<TableCell className="text-right space-x-2">
-								<Link href={`/dashboard/my-leads/${lead.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline text-sm" onClick={(e) => e.stopPropagation()}>View</Link>
+								<Link href={`/dashboard/my-leads/${lead.id}/view`} prefetch className="text-blue-600 underline-offset-2 hover:underline border rounded px-2 py-1 text-sm" onClick={(e) => e.stopPropagation()}>View</Link>
 								<Link href={`/dashboard/my-leads/${lead.id}`} prefetch className="text-sm px-2 py-1 border rounded" onClick={(e) => e.stopPropagation()}>Update</Link>
 								<AlertDialog>
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" size="icon" aria-label="More" onClick={(e) => e.stopPropagation()}>
+											<Button variant="ghost" className="rotate-90" size="icon" aria-label="More" onClick={(e) => e.stopPropagation()}>
 												⋯
 											</Button>
 										</DropdownMenuTrigger>

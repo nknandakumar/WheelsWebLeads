@@ -50,16 +50,21 @@ function mapRow(row: any) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const offset = parseInt(searchParams.get("offset") || "0", 10);
-  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
-  const { rows } = await query(`SELECT * FROM disbursement ORDER BY id DESC OFFSET $1 LIMIT $2`, [offset, limit]);
-  return NextResponse.json(rows.map(mapRow));
+  try {
+    const { searchParams } = new URL(req.url);
+    const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
+    const { rows } = await query(`SELECT * FROM disbursement ORDER BY id DESC OFFSET $1 LIMIT $2`, [offset, limit]);
+    return NextResponse.json(rows.map(mapRow));
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Failed to fetch disbursements" }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const b = await req.json();
-  const { rows } = await query(
+  try {
+    const b = await req.json();
+    const { rows } = await query(
     `INSERT INTO disbursement (
       loan_id, date_time, source, stage,
       profile_type, name, gender, customer_profile, pan_no, mobile_no, email, dsa,
@@ -89,6 +94,9 @@ export async function POST(req: NextRequest) {
       b.tenure || null, b.irr || null, b.emiAmount || null, b.emiDate || null,
       b.transaction1, b.transaction2 || null, b.remarksForHold || null, b.utr || null, b.rcCardStatus
     ]
-  );
-  return NextResponse.json(mapRow(rows[0]), { status: 201 });
+    );
+    return NextResponse.json(mapRow(rows[0]), { status: 201 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Failed to create disbursement" }, { status: 500 });
+  }
 }

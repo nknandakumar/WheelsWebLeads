@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Users, CircleDollarSign, ClipboardList } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ActionCard } from "@/components/dashboard/action-card";
-import { logout } from "@/lib/auth";
 
 export default function DashboardPage() {
 	const router = useRouter();
 
 	const handleLogout = () => {
-		logout();
+		fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
 		router.replace("/login");
 	};
 

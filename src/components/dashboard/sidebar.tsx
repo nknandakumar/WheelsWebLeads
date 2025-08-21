@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
 	Car,
@@ -10,6 +11,7 @@ import {
 	FileText,
 	FileBarChart2,
 	LogOut,
+	Loader2,
 	PanelLeft,
 } from "lucide-react";
 
@@ -24,15 +26,27 @@ import {
 	SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { logout } from "@/lib/auth";
 
 export function DashboardSidebar() {
 	const pathname = usePathname();
 	const router = useRouter();
+	const [busy, setBusy] = useState(false);
 
-	const handleLogout = () => {
-		logout();
-		router.replace("/login");
+	useEffect(() => {
+		router.prefetch("/login");
+	}, [router]);
+
+	const handleLogout = async () => {
+		if (busy) return;
+		setBusy(true);
+		try {
+			const logoutReq = fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+			const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
+			await Promise.race([logoutReq, timeout]);
+		} finally {
+			router.replace("/login");
+			setBusy(false);
+		}
 	};
 
 	const menuItems = [
@@ -70,7 +84,7 @@ export function DashboardSidebar() {
 				<SidebarMenu>
 					{menuItems.map((item) => (
 						<SidebarMenuItem key={item.href}>
-							<Link href={item.href}>
+							<Link href={item.href} prefetch>
 								<SidebarMenuButton
 									isActive={pathname === item.href}
 									tooltip={{ children: item.label }}
@@ -86,11 +100,21 @@ export function DashboardSidebar() {
 			<SidebarFooter>
 				<Button
 					variant="ghost"
-					className="w-full justify-start gap-2"
+					className="w-full justify-start gap-2 min-h-9"
 					onClick={handleLogout}
+					disabled={busy}
 				>
-					<LogOut className="h-4 w-4" />
-					<span>Logout</span>
+					{busy ? (
+						<>
+							<Loader2 className="h-4 w-4 animate-spin" />
+							<span>Logging out…</span>
+						</>
+					) : (
+						<>
+							<LogOut className="h-4 w-4" />
+							<span>Logout</span>
+						</>
+					)}
 				</Button>
 			</SidebarFooter>
 		</Sidebar>

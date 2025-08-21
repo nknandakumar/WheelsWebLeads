@@ -1,22 +1,23 @@
 "use client";
 
-import { NewDisbursementForm } from "@/components/dashboard/new-disbursement-form";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+const NewDisbursementForm = dynamic(() => import("@/components/dashboard/new-disbursement-form").then(m => m.NewDisbursementForm), {
+  ssr: false,
+  loading: () => (
+    <div className="p-6 text-sm text-gray-600">Loading form…</div>
+  ),
+});
 export default function NewDisbursementPage() {
-  const router = useRouter();
   return (
     <div className="flex flex-col h-full p-6">
       <header className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/dashboard")}
-          className="flex items-center gap-2 text-black hover:bg-gray-100"
-        >
+        <Link href="/dashboard" prefetch className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-black hover:bg-gray-100">
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
-        </Button>
+        </Link>
         <hr className="my-4 px-0 mx-0 border-gray-400" />
         <div className="flex items-center flex-col justify-between">
           <h1 className="text-2xl font-bold">New Disbursement</h1>

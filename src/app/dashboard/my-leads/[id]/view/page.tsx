@@ -101,7 +101,7 @@ export default function ViewLeadPage({ params }: { params: Promise<{ id: string 
             <h1 className="text-2xl font-bold">Lead Details</h1>
             <p className="text-muted-foreground">{lead.name} — {lead.loanId}</p>
           </div>
-          <div className="space-x-2 print:hidden">
+          <div className="space-x-2 flex justify-baseline items-center print:hidden">
             <Button variant="outline" onClick={() => router.push(`/dashboard/my-leads/${lead.id}`)}>Edit</Button>
             <Button onClick={onPrint}>Print</Button>
           </div>

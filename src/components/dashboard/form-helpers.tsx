@@ -78,6 +78,45 @@ export const FormSelect = ({
 	/>
 );
 
+// Custom input for RC NO (uppercase alphanumeric 6-15)
+export const FormRcInput = ({
+  control,
+  name,
+  label,
+  placeholder,
+  disabled = false,
+  className,
+}: Omit<FormInputProps, "type" | "onChange" | "onBlur" | "uppercase">) => (
+  <FormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem className={className}>
+        <FormLabel className="text-black font-medium">{label}</FormLabel>
+        <FormControl>
+          <Input
+            placeholder={placeholder}
+            type="text"
+            {...field}
+            maxLength={15}
+            className="border-gray-300 focus:border-green-500 focus:ring-green-500 focus:ring-1 text-gray-900 placeholder:text-gray-500 bg-white uppercase"
+            onChange={(e) => {
+              const value = e.target.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9]/g, "");
+              if (value.length <= 15) {
+                field.onChange(value);
+              }
+            }}
+            disabled={disabled}
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
 interface FormInputProps {
 	control: Control<any>;
 	name: string;

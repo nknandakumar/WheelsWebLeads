@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,10 +12,20 @@ import * as Constants from "@/lib/constants";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { FormSelect, FormInput } from "./form-helpers";
+import { FormSelect, FormInput, FormPanInput, FormMobileInput, FormRcInput } from "./form-helpers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface NewDisbursementFormProps {
   disbursement?: Disbursement;
@@ -25,6 +36,8 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loanIdType, setLoanIdType] = useState<"manual" | "auto">("auto");
+  const [errorOpen, setErrorOpen] = useState(false);
+  const [errorItems, setErrorItems] = useState<string[]>([]);
 
   const form = useForm<Disbursement>({
     resolver: zodResolver(DisbursementSchema),
@@ -99,30 +112,17 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
   }, [totalLoanAmount, pfCharges, documentationCharges, loanInsuranceCharges, otherCharges, rtoCharges, setValue]);
 
   const onSubmit = async (data: Disbursement) => {
-    console.log("onSubmit function called");
-    console.log("Form errors:", form.formState.errors);
-    console.log("Form is valid:", form.formState.isValid);
-    
     setLoading(true);
     try {
-      console.log("Disbursement form submission started");
-      console.log("Is edit mode:", !!disbursement);
-      console.log("Disbursement ID:", disbursement?.id);
-      console.log("Form data ID:", data.id);
-      
       // Set submitted date & time just before saving
       data.dateTime = new Date().toLocaleString();
       
       if (disbursement) {
-        console.log("Calling updateDisbursement with:", data);
         await updateDisbursement(data);
-        console.log("updateDisbursement completed successfully");
         toast({ title: "Success", description: "Disbursement updated successfully." });
         router.push(`/dashboard/my-disbursements/${data.id}/view`);
       } else {
-        console.log("Calling saveDisbursement with:", data);
         await saveDisbursement(data);
-        console.log("saveDisbursement completed successfully");
         toast({ title: "Success", description: "New disbursement created." });
         router.push("/dashboard/my-disbursements");
       }
@@ -139,6 +139,7 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
   };
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
     
@@ -213,8 +214,8 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
             <FormInput control={form.control} name="name" label="NAME" placeholder="Full Name" uppercase />
             <FormSelect control={form.control} name="gender" label="GENDER" placeholder="Select gender" options={Constants.GENDERS} />
             <FormSelect control={form.control} name="customerProfile" label="CUSTOMER PROFILE" placeholder="Select profile" options={Constants.CUSTOMER_PROFILES} />
-            <FormInput control={form.control} name="panNo" label="PAN NO" placeholder="ABCDE1234F" onChange={(e) => (e.target.value = e.target.value.toUpperCase())} />
-            <FormInput control={form.control} name="mobileNo" label="MOBILE NO" placeholder="10-digit number" type="tel" />
+            <FormPanInput control={form.control} name="panNo" label="PAN NO" placeholder="10 characters" />
+            <FormMobileInput control={form.control} name="mobileNo" label="MOBILE NO" placeholder="10-digit number" />
             <FormInput control={form.control} name="email" label="EMAIL ID" placeholder="example@mail.com" type="email" onChange={(e) => (e.target.value = e.target.value.toLowerCase())} />
             <FormSelect control={form.control} name="dsa" label="DSA" placeholder="Select DSA" options={Constants.DSAS} />
           </CardContent>
@@ -226,11 +227,11 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
             <CardTitle>Vehicle Information</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormInput control={form.control} name="rcNo" label="RC NO" placeholder="Vehicle RC No." uppercase />
+            <FormRcInput control={form.control} name="rcNo" label="RC NO" placeholder="Vehicle RC No." />
             <FormInput control={form.control} name="vehicleVerient" label="VEHICLE / VERIENT" placeholder="e.g., Maruti Suzuki Swift VXi" />
             <FormSelect control={form.control} name="mfgYear" label="MFG YEAR" placeholder="Select year" options={Constants.MFG_YEARS} />
             <FormSelect control={form.control} name="osNo" label="O. S NO" placeholder="Select O.S No" options={Constants.OS_NOS} />
-            <FormInput control={form.control} name="vehicleOwnerContactNo" label="VEHICLE OWNER CONTACT NO" placeholder="10-digit number" type="tel" />
+            <FormMobileInput control={form.control} name="vehicleOwnerContactNo" label="VEHICLE OWNER CONTACT NO" placeholder="10-digit number" />
           </CardContent>
         </Card>
 
@@ -253,7 +254,7 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormInput control={form.control} name="caseDealer" label="CASE DEALER" placeholder="Dealer Name" uppercase />
-            <FormInput control={form.control} name="dealerMob" label="DEALER MOB" placeholder="10-digit number" type="tel" />
+            <FormMobileInput control={form.control} name="dealerMob" label="DEALER MOB" placeholder="10-digit number" />
             <FormField
               control={form.control}
               name="remarksForHold"
@@ -339,36 +340,57 @@ export function NewDisbursementForm({ disbursement }: NewDisbursementFormProps) 
 
         {/* Step 7: Form Submission */}
         <div className="flex justify-end gap-3">
-          <Button type="button" className="bg-red-200 text-black hover:bg-red-300" variant="outline" onClick={() => router.back()}>
+          <Link href="/dashboard" prefetch className="inline-flex items-center justify-center rounded-md border px-4 py-2 bg-red-200 text-black hover:bg-red-300">
             Cancel
-          </Button>
+          </Link>
           <Button 
             type="button" 
             disabled={loading} 
-            className="bg-black text-white hover:bg-gray-800"
+            className="bg-black text-white hover:bg-gray-800 min-w-56"
             onClick={async () => {
-              console.log("Submit button clicked");
               const isValid = await form.trigger();
-              console.log("Form validation result:", isValid);
-              console.log("Form errors:", form.formState.errors);
-              console.log("Detailed errors:", JSON.stringify(form.formState.errors, null, 2));
-              
-              // Show specific field errors
-              Object.keys(form.formState.errors).forEach(field => {
-                console.log(`Error in field "${field}":`, (form.formState.errors as any)[field]);
-              });
-              
               if (isValid) {
                 form.handleSubmit(onSubmit)();
               } else {
-                console.log("Form validation failed - not submitting");
+                const errs = Object.entries(form.formState.errors)
+                  .map(([k, v]: any) => v?.message || `${k} is invalid`)
+                  .filter(Boolean)
+                  .slice(0, 10);
+                setErrorItems(errs.length ? errs : ["Please correct the highlighted fields."]);
+                setErrorOpen(true);
               }
             }}
           >
-            {loading ? (disbursement ? "Updating..." : "Submitting...") : (disbursement ? "Update Disbursement" : "Submit Disbursement")}
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {disbursement ? "Updating..." : "Submitting..."}
+              </span>
+            ) : (
+              disbursement ? "Update Disbursement" : "Submit Disbursement"
+            )}
           </Button>
         </div>
       </form>
     </Form>
+
+    <AlertDialog open={errorOpen} onOpenChange={setErrorOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Form validation failed</AlertDialogTitle>
+          <AlertDialogDescription>
+            <ul className="list-disc pl-5 space-y-1">
+              {errorItems.map((m, i) => (
+                <li key={i}>{m}</li>
+              ))}
+            </ul>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction>OK</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

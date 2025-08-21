@@ -5,14 +5,21 @@ let pool: Pool | undefined;
 
 export function getPool() {
   if (!pool) {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL is not set. Please add it to your .env.local");
+    }
+    // Neon connection via single URL
     pool = new Pool({
-      host: process.env.PGHOST || process.env.POSTGRES_HOST || "localhost",
-      port: +(process.env.PGPORT || process.env.POSTGRES_PORT || 5432),
-      user: process.env.PGUSER || process.env.POSTGRES_USER,
-      password: process.env.PGPASSWORD || process.env.POSTGRES_PASSWORD,
-      database: process.env.PGDATABASE || process.env.POSTGRES_DB,
-      ssl: process.env.PGSSL === "true" ? { rejectUnauthorized: false } : undefined,
+      connectionString: databaseUrl,
+      // sslmode=require is in the URL; keep this to avoid self-signed issues
+      ssl: { rejectUnauthorized: false },
       max: 10,
+      // Add sensible timeouts to fail fast instead of hanging ~20s+
+      connectionTimeoutMillis: 5000, // fail connecting within 5s
+      idleTimeoutMillis: 10000, // release idle clients after 10s
+      statement_timeout: 15000, // server-side statement timeout (ms)
+      query_timeout: 15000, // client-side query timeout (ms)
     });
   }
   return pool;

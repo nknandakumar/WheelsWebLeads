@@ -66,7 +66,7 @@ export default function MyDisbursementsPage() {
           </Link>
         </div>
         <hr className="my-4 px-0 mx-0 border-gray-400" />
-        <div className="flex justify-between items-center">
+        <div className="flex md:flex-row flex-col gap-4 justify-between items-center">
           <h1 className="text-2xl font-bold">My Disbursements</h1>
           <div className="w-full max-w-sm">
             <Input

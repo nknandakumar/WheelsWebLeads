@@ -103,10 +103,13 @@ CREATE TABLE IF NOT EXISTS disbursement (
 CREATE INDEX IF NOT EXISTS idx_disb_loan_id ON disbursement(loan_id);
 CREATE INDEX IF NOT EXISTS idx_disb_stage ON disbursement(stage);
 
--- Users/login tables (basic placeholder, adjust to your auth approach later)
-CREATE TABLE IF NOT EXISTS users (
+
+
+-- Credentials table for app authentication (admin/user, unique per role)
+CREATE TABLE IF NOT EXISTS credentials (
   id SERIAL PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'user'
+  role VARCHAR NOT NULL CHECK (role IN ('admin', 'user')),
+  username VARCHAR NOT NULL,
+  password VARCHAR NOT NULL,
+  CONSTRAINT unique_role UNIQUE (role)
 );

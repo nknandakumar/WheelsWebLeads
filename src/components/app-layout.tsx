@@ -5,7 +5,8 @@ import Navbar from "@/components/navbar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hasNavbar = pathname !== "/"; // hide on login page
+  // Hide navbar on login (and any nested auth routes if added later)
+  const hasNavbar = !(pathname === "/login" || pathname?.startsWith("/login/"));
 
   return (
     <>

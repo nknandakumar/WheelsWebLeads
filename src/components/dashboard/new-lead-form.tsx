@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as Constants from "@/lib/constants";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
 	Card,
 	CardContent,
@@ -108,6 +110,9 @@ export function NewLeadForm({ lead }: NewLeadFormProps) {
 		},
 	});
 
+	const [errorOpen, setErrorOpen] = useState(false);
+	const [errorItems, setErrorItems] = useState<string[]>([]);
+
 	const [loanIdType, setLoanIdType] = useState<"manual" | "auto">("auto");
 	// Prefill with current date & time for display; will be updated at submission
 
@@ -156,30 +161,17 @@ export function NewLeadForm({ lead }: NewLeadFormProps) {
 	]);
 
 	const onSubmit = async (data: Lead) => {
-		console.log("Lead onSubmit function called");
-		console.log("Form errors:", form.formState.errors);
-		console.log("Form is valid:", form.formState.isValid);
-		
 		setLoading(true);
 		try {
-			console.log("Form submission started");
-			console.log("Is edit mode:", !!lead);
-			console.log("Lead ID:", lead?.id);
-			console.log("Form data ID:", data.id);
-			
 			// Set submitted date & time just before saving
 			data.dateTime = new Date().toLocaleString();
 			
 			if (lead) {
-				console.log("Calling updateLead with:", data);
 				await updateLead(data);
-				console.log("updateLead completed successfully");
 				toast({ title: "Success", description: "Lead updated successfully." });
 				router.push(`/dashboard/my-leads/${data.id}/view`);
 			} else {
-				console.log("Calling saveLead with:", data);
 				await saveLead(data);
-				console.log("saveLead completed successfully");
 				toast({ title: "Success", description: "New lead created." });
 				router.push("/dashboard/my-leads");
 			}
@@ -524,28 +516,57 @@ export function NewLeadForm({ lead }: NewLeadFormProps) {
 					</Card>
 
 					<div className="flex justify-end gap-3">
-						<Button type="button" className="bg-red-200 text-black hover:bg-red-300" variant="outline" onClick={() => router.back()}>
+						<Link href="/dashboard" prefetch className="inline-flex items-center justify-center rounded-md border px-4 py-2 bg-red-200 text-black hover:bg-red-300">
 							Cancel
-						</Button>
+						</Link>
 						<Button 
 							type="button" 
 							disabled={loading} 
-							className="bg-black text-white hover:bg-gray-800"
+							className="bg-black text-white hover:bg-gray-800 min-w-48"
 							onClick={async () => {
-								console.log("Lead submit button clicked");
 								const isValid = await form.trigger();
-								console.log("Lead form validation result:", isValid);
-								console.log("Lead form errors:", form.formState.errors);
 								if (isValid) {
 									form.handleSubmit(onSubmit)();
+								} else {
+									const errs = Object.entries(form.formState.errors)
+										.map(([k, v]: any) => v?.message || `${k} is invalid`)
+										.filter(Boolean)
+										.slice(0, 10);
+									setErrorItems(errs.length ? errs : ["Please correct the highlighted fields."]);
+									setErrorOpen(true);
 								}
 							}}
 						>
-							{loading ? (lead ? "Updating..." : "Submitting...") : lead ? "Update Lead" : "Submit Lead"}
+							{loading ? (
+								<span className="inline-flex items-center gap-2">
+									<Loader2 className="h-4 w-4 animate-spin" />
+									{lead ? "Updating..." : "Submitting..."}
+								</span>
+							) : (
+								lead ? "Update Lead" : "Submit Lead"
+							)}
 						</Button>
 					</div>
 				</form>
 			</Form>
+
+			<AlertDialog open={errorOpen} onOpenChange={setErrorOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Form validation failed</AlertDialogTitle>
+						<AlertDialogDescription>
+							<ul className="list-disc pl-5 space-y-1">
+								{errorItems.map((m, i) => (
+									<li key={i}>{m}</li>
+								))}
+							</ul>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogAction>OK</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 }
